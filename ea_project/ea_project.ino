@@ -18,7 +18,7 @@ const int G = 26;
 const int B = 27;
 
 //PWM properties
-const int freq = 1020;      //Frequency for Motor
+const int freq = 1024;      //Frequency for Motor
 const int resolution = 10;  //  10 bits, 0 - 1024 level for Motor
 const int resolutionLED = 8;  //  8 bits, 0 - 255 level for LED
 
@@ -86,56 +86,61 @@ void loop() {
   
   // Makes sure we receive corrent values
 
-if (xAxis > 130 && xAxis <150 && yAxis > 130 && yAxis <150){Stop();}
+if (xAxis > 139 && xAxis <141 && yAxis > 139 && yAxis <141){Stop();}
 
 
-if (yAxis > 130 && yAxis <150){    
+if (yAxis > 139 && yAxis <141){    
 
-if (xAxis < 130){turnRight();
-motorSpeedA = map(xAxis, 130, 60, 0, 255);
-motorSpeedB = map(xAxis, 130, 60, 0, 255);    
-}
-
-if (xAxis > 150) {turnLeft();
-motorSpeedA = map(xAxis, 150, 220, 0, 255);
-motorSpeedB = map(xAxis, 150, 220, 0, 255); 
-}
-
-}else{
-
-if (xAxis > 130 && xAxis <150){   
-
-if (yAxis < 130){forword();}
-if (yAxis > 150){backword();}
-
-if (yAxis < 130){
-motorSpeedA = map(yAxis, 130, 60, 0, 255);
-motorSpeedB = map(yAxis, 130, 60, 0, 255); 
-}
-
-if (yAxis > 150){
-motorSpeedA = map(yAxis, 150, 220, 0, 255);
-motorSpeedB = map(yAxis, 150, 220, 0, 255);
- }
- 
-}else{
-
-if (yAxis < 130){forword();}
-if (yAxis > 150){backword();}
-
-if (xAxis < 130){
-motorSpeedA = map(xAxis, 130, 60, 255, 50);
-motorSpeedB = 255; 
- }
- 
-if (xAxis > 150){
-motorSpeedA = 255;
-motorSpeedB = map(xAxis, 150, 220, 255, 50); 
+  if (xAxis < 139){;
+    motorSpeedA = map(xAxis, 139, 60, 0, 1024);
+    motorSpeedB = map(xAxis, 139, 60, 0, 1024); 
+    turnRight();   
   }
- } 
+
+  if (xAxis > 141) {turnLeft();
+    motorSpeedA = map(xAxis, 141, 220, 0, 1024);
+    motorSpeedB = map(xAxis, 141, 220, 0, 1024); 
+    turnLeft();
+  }
+
+}else{
+
+  if (xAxis > 139 && xAxis <141){   
+
+    if (yAxis < 139){
+      motorSpeedA = map(yAxis, 139, 60, 0, 1024);
+      motorSpeedB = map(yAxis, 139, 60, 0, 1024); 
+    }
+
+    if (yAxis > 141){
+      motorSpeedA = map(yAxis, 141, 220, 0, 1024);
+      motorSpeedB = map(yAxis, 141, 220, 0, 1024);
+    }
+  
+    if (yAxis < 139){forword();}
+    if (yAxis > 141){backword();}
+ 
+  }else{
+
+    if (xAxis < 139){
+      motorSpeedA = map(xAxis, 139, 60, 1024, 0);
+      motorSpeedB = map(yAxis, 139, 60, 1024, 0) ? yAxis<139 : map(yAxis, 141, 220, 0, 1024);
+    }
+    
+    if (xAxis > 141){
+      motorSpeedA = map(yAxis, 139, 60, 1024, 0) ? yAxis<139 : map(yAxis, 141, 220, 0, 1024);
+      motorSpeedB = map(xAxis, 141, 220, 1024, 0); 
+    }
+
+      
+    if (yAxis < 139){
+      forword();
+    }
+    if (yAxis > 141){
+      backword();
+    }
+  } 
 }
-motorSpeedA = motorSpeedA/255*1020;
-motorSpeedB = motorSpeedB/255*1020;
 
    //Serial.print(motorSpeedA);
    //Serial.print(",");
@@ -143,39 +148,38 @@ motorSpeedB = motorSpeedB/255*1020;
 
 }
 
-
 void forword(){Serial.println("forword");
-ledcWrite(motorL1, motorSpeedA);
-ledcWrite(motorL0, 0); 
-ledcWrite(motorR1, motorSpeedB);
-ledcWrite(motorR0, 0);
+  ledcWrite(motorL1, motorSpeedA);
+  ledcWrite(motorL0, 0); 
+  ledcWrite(motorR1, motorSpeedB);
+  ledcWrite(motorR0, 0);
 }
 
 void backword(){Serial.println("backword");
-ledcWrite(motorL1, 0);
-ledcWrite(motorL0, motorSpeedA); 
-ledcWrite(motorR1, 0);
-ledcWrite(motorR0, motorSpeedB);
+  ledcWrite(motorL1, 0);
+  ledcWrite(motorL0, motorSpeedA); 
+  ledcWrite(motorR1, 0);
+  ledcWrite(motorR0, motorSpeedB);
 }
 
 void turnRight(){Serial.println("turnRight");
-ledcWrite(motorL1, motorSpeedA);
-ledcWrite(motorL0, 0); 
-ledcWrite(motorR1, 0);
-ledcWrite(motorR0, motorSpeedB);
+  ledcWrite(motorL1, motorSpeedA);
+  ledcWrite(motorL0, 0); 
+  ledcWrite(motorR1, 0);
+  ledcWrite(motorR0, motorSpeedB);
 }
 
 void turnLeft(){Serial.println("turnLeft");
-ledcWrite(motorL1, 0);
-ledcWrite(motorL0, motorSpeedA); 
-ledcWrite(motorR1, motorSpeedB);
-ledcWrite(motorR0, 0);
+  ledcWrite(motorL1, 0);
+  ledcWrite(motorL0, motorSpeedA); 
+  ledcWrite(motorR1, motorSpeedB);
+  ledcWrite(motorR0, 0);
 }
 
 void Stop(){
-ledcWrite(motorL1, 0);
-ledcWrite(motorL0, 0); 
-ledcWrite(motorR1, 0);
-ledcWrite(motorR0, 0);
-Serial.println("stop");
+  ledcWrite(motorL1, 0);
+  ledcWrite(motorL0, 0); 
+  ledcWrite(motorR1, 0);
+  ledcWrite(motorR0, 0);
+  Serial.println("stop");
 }
