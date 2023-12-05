@@ -5,6 +5,7 @@
 #endif
 BluetoothSerial SerialBT;
 
+
 //Motor 針腳定數
 const int motorL_pin0 = 19;
 const int motorL_pin1 = 21;
@@ -35,27 +36,20 @@ const int ledR = 8;         // Channel 4
 const int ledG = 9;         // Channel 5 
 const int ledB = 10;         // Channel 6 
 
-// input buffer
-char buf[10] = {0};
-int i = 0;
-int reverseSpeed = 0;
+int xAxis=140, yAxis=140;
 
-// init
-bool stringComplete = false;
+int motorSpeedA = 0;
+int motorSpeedB = 0;
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial)
-  {
-    // Wait for serial port to connect, needed for native USB port only
-  }
-  // SerialBT.begin("ESP32_YeungWing");
-  
-  //初始化Motor設置
+  SerialBT.begin("ESP32_YeungWing"); // Default communication rate of the Bluetooth module
+
   ledcSetup(motorL0, freq, resolution); 
   ledcSetup(motorL1, freq, resolution); 
   ledcSetup(motorR0, freq, resolution); 
   ledcSetup(motorR1, freq, resolution); 
+  delay(500);
 
   // 連接摩打至channel
   ledcAttachPin(motorL_pin0, motorL0);     //設定左摩打19號腳用Channel
@@ -74,99 +68,114 @@ void setup() {
   ledcAttachPin(B, ledB); 
 }
 
-void loop() 
-{
-  while (Serial.available())
-  {                                         
-    char btInput = (char)Serial.read();
+void loop() {
+  // Default value - no movement when the Joystick stays in the center
+  //xAxis = 140;
+  //yAxis = 140;
 
-    if (btInput == '\n'){
-      buf[i++] = btInput;
-      buf[i] = 0;
-      stringComplete = true;
-    }else{
-      buf[i++] = btInput;
-    }
-
-    
-  if (stringComplete){
-    Serial.print(buf);    // the printing of string will be stopped when zero is reached
-    stringComplete = false;
-    i = 0;
+  // Read the incoming data from the Smartphone Android App
+  while (SerialBT.available() >= 2) {
+    xAxis = SerialBT.read();
+    delay(10);
+    yAxis = SerialBT.read();
+   Serial.print(xAxis);
+   Serial.print(",");
+   Serial.println(yAxis);
   }
-
-  switch (buf[0]){
-    case 'f': //f11 f12 ... f69   [0]=forward [1]=檔 [2]=speed
-      forward(1133/9*(3+(buf[1])-'0')*(buf[2]-'0')/10);
-      Serial.println(1133/9*(3+(buf[1])-'0')*(buf[2]-'0')/10);
-      break;
-    case 'l': //f11 f12 ... f69   [0]=forward [1]=檔 [2]=speed
-      if (buf[1]=='0'){
-        left(1133*(buf[2]-'0')/10);
-      }
-      leftS(1133/9*(3+(buf[1])-'0')*(buf[2]-'0')/10, ((buf[2]-'0')%10)*10);
-      break;
-    case 'r': //f11 f12 ... f69   [0]=forward [1]=檔 [2]=speed
-      if (buf[1]=='0'){
-        left(1133*(buf[2]-'0')/10);
-      }
-      rightS(1133/9*(3+(buf[1])-'0')*(buf[2]-'0')/10, ((buf[2]-'0')%10)*10);
-      break;
-    
-    default:
-      stop();
-      break;
-  }
+  delay(10);
   
+  // Makes sure we receive corrent values
+
+if (xAxis > 130 && xAxis <150 && yAxis > 130 && yAxis <150){Stop();}
+
+
+if (yAxis > 130 && yAxis <150){    
+
+if (xAxis < 130){turnRight();
+motorSpeedA = map(xAxis, 130, 60, 0, 255);
+motorSpeedB = map(xAxis, 130, 60, 0, 255);    
+}
+
+if (xAxis > 150) {turnLeft();
+motorSpeedA = map(xAxis, 150, 220, 0, 255);
+motorSpeedB = map(xAxis, 150, 220, 0, 255); 
+}
+
+}else{
+
+if (xAxis > 130 && xAxis <150){   
+
+if (yAxis < 130){forword();}
+if (yAxis > 150){backword();}
+
+if (yAxis < 130){
+motorSpeedA = map(yAxis, 130, 60, 0, 255);
+motorSpeedB = map(yAxis, 130, 60, 0, 255); 
+}
+
+if (yAxis > 150){
+motorSpeedA = map(yAxis, 150, 220, 0, 255);
+motorSpeedB = map(yAxis, 150, 220, 0, 255);
+ }
+ 
+}else{
+
+if (yAxis < 130){forword();}
+if (yAxis > 150){backword();}
+
+if (xAxis < 130){
+motorSpeedA = map(xAxis, 130, 60, 255, 50);
+motorSpeedB = 255; 
+ }
+ 
+if (xAxis > 150){
+motorSpeedA = 255;
+motorSpeedB = map(xAxis, 150, 220, 255, 50); 
   }
+ } 
+}
+motorSpeedA = motorSpeedA/255*1020;
+motorSpeedB = motorSpeedB/255*1020;
+
+   //Serial.print(motorSpeedA);
+   //Serial.print(",");
+   //Serial.println(motorSpeedA);
 
 }
 
-void forward(int speed){
-  ledcWrite(motorL0, 0);
-  ledcWrite(motorL1, speed);
-  ledcWrite(motorR0, 0);
-  ledcWrite(motorR1, speed);
+
+void forword(){Serial.println("forword");
+ledcWrite(motorL1, motorSpeedA);
+ledcWrite(motorL0, 0); 
+ledcWrite(motorR1, motorSpeedB);
+ledcWrite(motorR0, 0);
 }
 
-void back(int speed){
-  ledcWrite(motorL0, speed);
-  ledcWrite(motorL1, 0);
-  ledcWrite(motorR0, speed);
-  ledcWrite(motorR1, 0);
+void backword(){Serial.println("backword");
+ledcWrite(motorL1, 0);
+ledcWrite(motorL0, motorSpeedA); 
+ledcWrite(motorR1, 0);
+ledcWrite(motorR0, motorSpeedB);
 }
 
-void left(int speed){
-  ledcWrite(motorL0, 0);
-  ledcWrite(motorL1, speed);
-  ledcWrite(motorR0, 0);
-  ledcWrite(motorR1, 0);
+void turnRight(){Serial.println("turnRight");
+ledcWrite(motorL1, motorSpeedA);
+ledcWrite(motorL0, 0); 
+ledcWrite(motorR1, 0);
+ledcWrite(motorR0, motorSpeedB);
 }
 
-void leftS(int speed, int swift){
-  ledcWrite(motorL0, 0);
-  ledcWrite(motorL1, speed);
-  ledcWrite(motorR0, 0);
-  ledcWrite(motorR1, speed/swift);
+void turnLeft(){Serial.println("turnLeft");
+ledcWrite(motorL1, 0);
+ledcWrite(motorL0, motorSpeedA); 
+ledcWrite(motorR1, motorSpeedB);
+ledcWrite(motorR0, 0);
 }
 
-void right(int speed){
-  ledcWrite(motorL0, 0);
-  ledcWrite(motorL1, 0);
-  ledcWrite(motorR0, 0);
-  ledcWrite(motorR1, speed);
-}
-
-void rightS(int speed, int swift){
-  ledcWrite(motorL0, 0);
-  ledcWrite(motorL1, speed/swift);
-  ledcWrite(motorR0, 0);
-  ledcWrite(motorR1, speed);
-}
-
-void stop(){
-  ledcWrite(motorL0, 0);
-  ledcWrite(motorL1, 0);
-  ledcWrite(motorR0, 0);
-  ledcWrite(motorR1, 0);
+void Stop(){
+ledcWrite(motorL1, 0);
+ledcWrite(motorL0, 0); 
+ledcWrite(motorR1, 0);
+ledcWrite(motorR0, 0);
+Serial.println("stop");
 }
