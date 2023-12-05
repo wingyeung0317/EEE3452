@@ -40,6 +40,7 @@ int xAxis=140, yAxis=140;
 
 int motorSpeedA = 0;
 int motorSpeedB = 0;
+double degree = -1;
 
 void setup() {
   Serial.begin(115200);
@@ -78,13 +79,12 @@ void loop() {
     xAxis = SerialBT.read();
     delay(10);
     yAxis = SerialBT.read();
-   Serial.print(xAxis);
-   Serial.print(",");
-   Serial.println(yAxis);
   }
   delay(10);
   
   // Makes sure we receive corrent values
+
+degree=-1;
 
 if (xAxis > 139 && xAxis <141 && yAxis > 139 && yAxis <141){Stop();}
 
@@ -94,13 +94,13 @@ if (yAxis > 139 && yAxis <141){
   if (xAxis < 139){;
     motorSpeedA = map(xAxis, 139, 60, 0, 1024);
     motorSpeedB = map(xAxis, 139, 60, 0, 1024); 
-    turnRight();   
+    turnLeft();   
   }
 
-  if (xAxis > 141) {turnLeft();
+  if (xAxis > 141) {
     motorSpeedA = map(xAxis, 141, 220, 0, 1024);
     motorSpeedB = map(xAxis, 141, 220, 0, 1024); 
-    turnLeft();
+    turnRight();
   }
 
 }else{
@@ -110,35 +110,89 @@ if (yAxis > 139 && yAxis <141){
     if (yAxis < 139){
       motorSpeedA = map(yAxis, 139, 60, 0, 1024);
       motorSpeedB = map(yAxis, 139, 60, 0, 1024); 
+      forward();
     }
 
     if (yAxis > 141){
       motorSpeedA = map(yAxis, 141, 220, 0, 1024);
       motorSpeedB = map(yAxis, 141, 220, 0, 1024);
+      backward();
     }
-  
-    if (yAxis < 139){forword();}
-    if (yAxis > 141){backword();}
  
   }else{
 
     if (xAxis < 139){
-      motorSpeedA = map(xAxis, 139, 60, 1024, 0);
-      motorSpeedB = map(yAxis, 139, 60, 1024, 0) ? yAxis<139 : map(yAxis, 141, 220, 0, 1024);
-    }
-    
-    if (xAxis > 141){
-      motorSpeedA = map(yAxis, 139, 60, 1024, 0) ? yAxis<139 : map(yAxis, 141, 220, 0, 1024);
-      motorSpeedB = map(xAxis, 141, 220, 1024, 0); 
+      // View calc.png
+      if (yAxis<139){
+        degree = atan((140-xAxis)/(140-yAxis));
+        Serial.print(degree);
+        if (degree==-1){
+        }else if (degree<=0.785){
+          motorSpeedA = map(xAxis, 139, 60, map(yAxis, 139, 60, 0, 1024), 0);
+          motorSpeedB = map(yAxis, 139, 60, 0, 1024);
+          forward();
+          Serial.println("ForwardL");
+        }else{
+          motorSpeedA = map(yAxis, 141, 60, map(xAxis, 139, 60, 0, 1024), 0);
+          motorSpeedB = map(xAxis, 139, 60, 0, 1024); 
+          turnLeft();
+          Serial.println("LeftF");
+        }
+      }
+
+      if (yAxis>141){
+        degree = atan((140-xAxis)/(yAxis-140));
+        Serial.print(degree);
+        if (degree==-1){
+        }else if (degree<=0.785){
+          motorSpeedA = map(yAxis, 141, 220, 0, 1024);
+          motorSpeedB = map(xAxis, 139, 60, map(yAxis, 141, 220, 0, 1024), 0);
+          backward();
+          Serial.println("backwardL");
+        }else{
+          motorSpeedA = map(xAxis, 139, 60, 0, 1024); 
+          motorSpeedB = map(yAxis, 141, 220, map(xAxis, 139, 60, 0, 1024), 0);
+          turnLeft();
+          Serial.println("LeftB");
+        }
+      }
+    }else if (xAxis > 141){
+      if (yAxis<139){
+        degree = atan((xAxis-140)/(140-yAxis));
+        Serial.print(degree);
+        if (degree==-1){
+        }else if (degree<=0.785){
+          motorSpeedA = map(yAxis, 139, 60, 0, 1024);
+          motorSpeedB = map(xAxis, 141, 220, map(yAxis, 139, 60, 0, 1024), 0);
+          forward();
+          Serial.println("ForwardR");
+        }else{
+          motorSpeedA = map(xAxis, 141, 220, 0, 1024); 
+          motorSpeedB = map(yAxis, 139, 60, map(xAxis, 141, 220, 0, 1024), 0);
+          turnRight();
+          Serial.println("RightF");
+        }
+      }
+      
+      if (yAxis>141){
+        degree = atan((xAxis-140)/(yAxis-140));
+        Serial.print(degree);
+        if (degree==-1){
+        }else if (degree<=0.785){
+          motorSpeedA = map(yAxis, 141, 220, 0, 1024);
+          motorSpeedB = map(xAxis, 141, 220, map(yAxis, 141, 220, 0, 1024), 0);
+          backward();
+          Serial.println("backwardR");
+        }else{
+          motorSpeedA = map(yAxis, 141, 220, map(xAxis, 141, 220, 0, 1024), 0);
+          motorSpeedB = map(xAxis, 141, 220, 0, 1024); 
+          turnRight();
+          Serial.println("RightB");
+        }
+      }
     }
 
-      
-    if (yAxis < 139){
-      forword();
-    }
-    if (yAxis > 141){
-      backword();
-    }
+
   } 
 }
 
@@ -148,14 +202,14 @@ if (yAxis > 139 && yAxis <141){
 
 }
 
-void forword(){Serial.println("forword");
+void forward(){Serial.println("forward");
   ledcWrite(motorL1, motorSpeedA);
   ledcWrite(motorL0, 0); 
   ledcWrite(motorR1, motorSpeedB);
   ledcWrite(motorR0, 0);
 }
 
-void backword(){Serial.println("backword");
+void backward(){Serial.println("backward");
   ledcWrite(motorL1, 0);
   ledcWrite(motorL0, motorSpeedA); 
   ledcWrite(motorR1, 0);
@@ -181,5 +235,4 @@ void Stop(){
   ledcWrite(motorL0, 0); 
   ledcWrite(motorR1, 0);
   ledcWrite(motorR0, 0);
-  Serial.println("stop");
 }
