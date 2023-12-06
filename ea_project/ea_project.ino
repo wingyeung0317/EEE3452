@@ -36,6 +36,7 @@ const int ledR = 8;         // Channel 4
 const int ledG = 9;         // Channel 5 
 const int ledB = 10;         // Channel 6 
 
+int r, g, b;
 int xAxis=140, yAxis=140;
 
 int motorSpeedA = 0;
@@ -50,7 +51,6 @@ void setup() {
   ledcSetup(motorL1, freq, resolution); 
   ledcSetup(motorR0, freq, resolution); 
   ledcSetup(motorR1, freq, resolution); 
-  delay(500);
 
   // 連接摩打至channel
   ledcAttachPin(motorL_pin0, motorL0);     //設定左摩打19號腳用Channel
@@ -75,14 +75,19 @@ void loop() {
   //yAxis = 140;
 
   // Read the incoming data from the Smartphone Android App
-  while (SerialBT.available() >= 2) {
+  while (SerialBT.available() >= 5) {
     xAxis = SerialBT.read();
-    delay(10);
     yAxis = SerialBT.read();
+    r = SerialBT.read();
+    g = SerialBT.read();
+    b  = SerialBT.read();
   }
-  delay(10);
   
   // Makes sure we receive corrent values
+
+ledcWrite(ledR, r);
+ledcWrite(ledG, g);
+ledcWrite(ledB, b);
 
 degree=-1;
 
